@@ -6,12 +6,13 @@
 // Object根据eventSystem传过来的event和value来决定要对什么数据进行修改，又修改成什么样。
 #include "Singleton.h"
 #include "genericInput.h"
+#include <iostream>
 class Action
 {
 private:
     bool IsPressed;
-public:
 
+public:
     Action()
     {
         IsPressed = false;
@@ -24,16 +25,15 @@ public:
 
     void clear()
     {
-        IsPressed = false;
+        Update(false);
     }
-    bool GetPressed(){
+    bool GetPressed()
+    {
         return IsPressed;
     }
-
-
 };
 
-class Actions : Singleton<PlayerInput>
+class Actions : Singleton<Actions>
 {
     friend class PlayerInput;
 
@@ -47,14 +47,31 @@ private:
                                                       {ActionCode::Left, Left},
                                                       {ActionCode::Right, Right}};
 
-    void ClearActions(){
-        for(auto& action : actions){
+    void ClearActions()
+    {
+        for (auto &action : actions)
+        {
             action.second.clear();
         }
     }
+
 public:
-    bool GetKeyDown(ActionCode code){
+
+    void UpdateKey(ActionCode code, bool _IsPressed)
+    {
+        actions[code].Update(_IsPressed);
+        return;
+    }
+    bool GetKeyDown(ActionCode code)
+    {
         return actions[code].GetPressed();
+    }
+    void GetKeyStatus()
+    {
+        std::cout << (GetKeyDown(ActionCode::Up) ? "up\n" : "");
+        std::cout << (GetKeyDown(ActionCode::Down) ? "down\n" : "");
+        std::cout << (GetKeyDown(ActionCode::Left) ? "left\n" : "");
+        std::cout << (GetKeyDown(ActionCode::Right) ? "right\n" : "");
     }
 };
 class PlayerInput : Singleton<PlayerInput>
@@ -62,7 +79,6 @@ class PlayerInput : Singleton<PlayerInput>
     friend class Singleton;
 
 private:
-    Actions actions;
     // Get All Keyboard Signal from input.
     GenericInput::Input input;
     // Update the GameInput By Signal per frame
@@ -100,12 +116,15 @@ public:
         }
         return true;
     }
-
-    // 输入检测
-    bool UpdateControl(unsigned timeOffset)
+    void ClearControls()
     {
         // 清空原先button的状态
-        actions.ClearActions();
+        Singleton<Actions>::GetInstance().ClearActions();
+    }
+
+    // 输入检测
+    bool UpdateControl(clock_t timeOffset)
+    {
         // 更新button状态
         input.updateSignals(timeOffset);
         while (!input.isEmpty())
@@ -114,26 +133,14 @@ public:
 
             signal = input.getLatestSignal();
             ActionCode signalKey = signal.first;
-            std::cout << signalKey << std::endl;
             // 强制结束指令
             if (signalKey == ActionCode::Exit)
             {
                 return false;
             }
-            switch (signalKey)
-            {
-            case ActionCode::Up:
-                actions.Up.Update(true);
-                break;
-            case ActionCode::Down:
-                actions.Down.Update(true);
-                break;
-            case ActionCode::Left:
-                actions.Left.Update(true);
-                break;
-            case ActionCode::Right:
-                actions.Right.Update(true);
-                break;
+            else{
+                Singleton<Actions>::GetInstance().UpdateKey(signalKey, true);
+                // Singleton<Actions>::GetInstance().GetKeyStatus();
             }
             // 将当前帧的所有signal全部转化成按键信息
         }

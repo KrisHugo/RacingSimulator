@@ -85,9 +85,9 @@ enum ActionCode
     Right,
     DoNothing
 };
-#define Signal std::pair<ActionCode, unsigned>
+#define Signal std::pair<ActionCode, clock_t>
 
-std::unordered_map<KeyCode, ActionCode> KeyActionMapping({{KeyCode::ESC, ActionCode::Exit},
+static std::unordered_map<KeyCode, ActionCode> KeyActionMapping({{KeyCode::ESC, ActionCode::Exit},
                                                       {KeyCode::W, ActionCode::Up},
                                                       {KeyCode::S, ActionCode::Down},
                                                       {KeyCode::A, ActionCode::Left},

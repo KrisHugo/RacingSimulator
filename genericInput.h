@@ -7,7 +7,7 @@
 //负责接收键盘信息，并且将之转换成游戏内的输入信号
 //意味着需要存储键盘和游戏输入执行的映射表，并负责存储所有的输入信息
 //由于游戏内可能存在多键同步才映射到某个键位，因此需要更加做一个message信道来存储信息，并且需要存储与上一个信号之间的输入延迟，来确保与上一个信号是同一次的操作。
-//signal, timeOffset
+//signal, offset
 namespace GenericInput{
 
 class Input{
@@ -26,20 +26,21 @@ private:
         }
         return true;
     }
-    std::queue<Signal> CheckKeyboardInput(unsigned timeOffset){
+    std::queue<Signal> CheckKeyboardInput(clock_t offset){
         // std::cout << "hotkey check: " << registeredHotKey.size() << std::endl;
         std::queue<Signal> newSignals;
         for(auto hotkey : registeredHotKey){
             // std::cout << hotkey << std::endl;
             if(KEYDOWN(hotkey)){
-                newSignals.push(Signal({KeyActionMapping[(KeyCode)hotkey], timeOffset}));
+                newSignals.push(Signal({KeyActionMapping[(KeyCode)hotkey], offset}));
             }
         }
         return newSignals;
     }
 
 public:
-    unsigned allowOffset = 10;
+    // maybe 0.5s delay allowed
+    clock_t delaySeconds = CLOCKS_PER_SEC >> 1;
     std::queue<Signal> signals;
 
     bool isEmpty(){
@@ -66,12 +67,12 @@ public:
         return registeredHotKey.find(keyCode) == registeredHotKey.end();
     }
 
-    bool updateSignals(unsigned timeOffset){
-        return Insert(CheckKeyboardInput(timeOffset));
+    bool updateSignals(clock_t offset){
+        return Insert(CheckKeyboardInput(offset));
     }
 
      Signal GetNothingSignal(){
-        return {ActionCode::DoNothing, allowOffset};
+        return {ActionCode::DoNothing, delaySeconds};
     }
 };
 }

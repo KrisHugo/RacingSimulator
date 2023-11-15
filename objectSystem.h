@@ -13,15 +13,15 @@ class ObjectSystem : public Singleton<ObjectSystem>
 private:
     unsigned counter;
     
-    std::vector<MenuObject> menuObjects;
-    std::vector<GameObject> gameObjects;
+    std::vector<MenuObject*> menuObjects;
+    std::vector<GameObject*> gameObjects;
     ObjectSystem()
     {
         counter = 0;
     }
 
 public:
-    bool Initialization(std::vector<MenuObject> _menuObjects, std::vector<GameObject> _gameObjects)
+    bool Initialization(std::vector<MenuObject*> _menuObjects, std::vector<GameObject*> _gameObjects)
     {
         counter = 0;
         menuObjects = _menuObjects;
@@ -33,29 +33,31 @@ public:
     {
         for (auto object : menuObjects)
         {
-            object.Update();
+            object->Update();
         }
         for (auto object : gameObjects)
         {
-            object.Update();
+            // Singleton<Actions>::GetInstance().GetKeyStatus();
+            object->Update();
         }
     }
-    bool RegisterGameObject(GameObject object)
+    bool RegisterGameObject(GameObject* object)
     {
         gameObjects.push_back(object);
         return true;
     }
 
-    bool RegisterMenuObject(MenuObject object)
+    bool RegisterMenuObject(MenuObject* object)
     {
         menuObjects.push_back(object);
         return true;
     }
+
     bool UnregisterGameObject(unsigned uid)
     {
         for (auto object = gameObjects.begin(); object != gameObjects.end(); object++)
         {
-            if (object->getUid() == uid)
+            if ((*object)->getUid() == uid)
             {
                 gameObjects.erase(object);
             }

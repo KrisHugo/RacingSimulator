@@ -6,11 +6,11 @@
 #include "objectSystem.h"
 class Scene{
 public:
-    std::vector<MenuObject> menuObject;
-    std::vector<GameObject> gameObjects;
+    std::vector<MenuObject*> menuObjects;
+    std::vector<GameObject*> gameObjects;
     Scene(){
-        menuObject = {MenuObject(1, 0)};
-        gameObjects = {Car(0)};
+        menuObjects = {new MenuObject(1, 0)};
+        gameObjects = {new Car(0)};
     }
 };
 class SceneSystem : Singleton<SceneSystem>
@@ -31,7 +31,7 @@ public:
         currentLevel = level;
         CurrentScene = Scene();
         Singleton<PlayerInput>::GetInstance().Initialization();
-        Singleton<ObjectSystem>::GetInstance().Initialization(CurrentScene.menuObject, CurrentScene.gameObjects);
+        Singleton<ObjectSystem>::GetInstance().Initialization(CurrentScene.menuObjects, CurrentScene.gameObjects);
     }
 };
 #endif

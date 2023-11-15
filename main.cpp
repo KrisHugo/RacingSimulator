@@ -3,7 +3,7 @@
 #include "staticMapping.h"
 #include "SceneSystem.h"
 
-using namespace std;
+//TO-DO 生成Time类, 用于获取deltaTime
 
 // 将所有单例系统进行初始化
 void GameInitialization()
@@ -13,7 +13,7 @@ void GameInitialization()
 
 int main()
 {
-    unsigned curTime = 0, lastTime;
+    clock_t curTime = 0, lastTime;
     
     std::cout << "Game Start" << std::endl;
     std::cout << "Generate Scene" << std::endl;
@@ -23,16 +23,19 @@ int main()
     while (true)
     {
         lastTime = curTime;
-        curTime = (unsigned)clock();
+        curTime = clock();
         if (!Singleton<PlayerInput>::GetInstance().UpdateControl(curTime - lastTime))
             break;
         
         Singleton<ObjectSystem>::GetInstance().UpdateObjects();
         // 首先执行玩家的操作
         // 进行游戏的其他系统自动工作
+        // std::cout << "\033c";
+        //清空中断数据
+        Singleton<PlayerInput>::GetInstance().ClearControls();
     }
     // 释放所有运存占用
-    cout << "game is closed" << endl;
+    std::cout << "game is closed" << std::endl;
     // 结束程序
 
     return 0;

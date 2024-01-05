@@ -14,6 +14,7 @@ void GameInitialization()
 int main()
 {
     clock_t curTime = 0, lastTime;
+    clock_t delta_time = 0;
     
     std::cout << "Game Start" << std::endl;
     std::cout << "Generate Scene" << std::endl;
@@ -24,6 +25,8 @@ int main()
     {
         lastTime = curTime;
         curTime = clock();
+        delta_time = curTime - lastTime;
+        std::cout << delta_time << "\r";
         if (!Singleton<PlayerInput>::GetInstance().UpdateControl(curTime - lastTime))
             break;
         
@@ -33,6 +36,9 @@ int main()
         // std::cout << "\033c";
         //清空中断数据
         Singleton<PlayerInput>::GetInstance().ClearControls();
+
+
+        //TODO: Render all objects.
     }
     // 释放所有运存占用
     std::cout << "game is closed" << std::endl;

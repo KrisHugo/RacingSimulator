@@ -6,6 +6,7 @@
 #include "staticMapping.h"
 #include "CustomMath.h"
 #include "InputSystem.h"
+#include "Timer.h"
 class Object
 {
 protected:
@@ -32,6 +33,12 @@ public:
     {
         std::cout << "Update" << std::endl;
     }
+
+    //TODO: this method should be a implement from renderSystem, and it will be control by any graphic card, which means its portable.
+    //we try to use openGL, and the render component will be one of the paravariables.
+    virtual void Render(){
+
+    }
 };
 class MenuObject : public Object
 {
@@ -52,9 +59,9 @@ public:
 class GameObject : public Object
 {
 protected:
-    vector2 position;
-    vector2 rotation;
-    vector2 forward;
+    Vector2 position;
+    Vector2 rotation;
+    Vector2 forward;
 
 public:
     GameObject(unsigned _uid) : Object(_uid)
@@ -67,18 +74,18 @@ public:
     {
         // std::cout << "GameObject Update" << std::endl;
     }
-    vector2 getPosition()
+    Vector2 getPosition()
     {
         return position;
     }
-    bool setPosition(double x, double y)
+    bool setPosition(float x, float y)
     {
         position = {x, y};
         return true;
     }
-    bool setPosition(vector2 _position)
+    bool setPosition(Vector2 _position)
     {
-        position = {_position.first, _position.second};
+        position = {_position.x, _position.y};
         return true;
     }
 };
@@ -86,12 +93,12 @@ class Car : public GameObject
 {
 private:
     bool gear = true; // only forward or backward like autogear.
-    double fraction = 1.0;
-    double engineForce = 3;
-    double breakForce = 4;
-    double maxSpeed = 120;
-    vector2 speed;
-    vector2 a;
+    float fraction = 1.0;
+    float engineForce = 3;
+    float breakForce = 4;
+    float maxSpeed = 120;
+    Vector2 speed;
+    Vector2 a;
 
 public:
     Car(unsigned _uid) : GameObject(_uid)
@@ -107,35 +114,40 @@ public:
     {
         // std::cout << "Car Update" << std::endl;
         // 每一时刻的加速度都需要根据当前的力情况重新计算
+        //InputUpdate
         a = {0.0, 0.0};
         if (Singleton<Actions>::GetInstance().GetKeyDown(ActionCode::Up))
         {
             // std::cout << "Car Go" << std::endl;
-            a.first += (gear ? 1 : -1) * engineForce * forward.first;
-            a.second += (gear ? 1 : -1) * engineForce * forward.second;
+            a.x += (gear ? 1 : -1) * engineForce * forward.x * GameTimer.getDeltaTime();
+            a.y += (gear ? 1 : -1) * engineForce * forward.y * GameTimer.getDeltaTime();
         }
         // while we push the breaker, we always intend to stop the car, no matter what direction it moving now.
         if (Singleton<Actions>::GetInstance().GetKeyDown(ActionCode::Down))
         {
             // std::cout << "Car Stop" << std::endl;
             // 这里应该求二维向量speed 与 forward的夹角
-            if(normalize2D(speed) >= 0.1f){
-                a.first += -1 * breakForce * speed.first;
-                a.second += -1 * breakForce * speed.second;
+            if(speed.Length >= 0.1f){
+                a.x += -1 * breakForce * speed.x * GameTimer.getDeltaTime();
+                a.y += -1 * breakForce * speed.y * GameTimer.getDeltaTime();
             }
         }
         // get actionCode left and right will change the car's forward.
         // if the power cant greater than fraction, than the car should just stop.
-        if (normalize2D(speed) >= 0.1f)
+        if (speed.Length >= 0.1f)
         {
-            a.first += -1 * std::min(normalize2D(speed), fraction) * speed.first;
-            a.second += -1 * std::min(normalize2D(speed), fraction) * speed.second;
+            a.x += -1 * std::min(speed.Length, fraction) * speed.x * GameTimer.getDeltaTime();
+            a.y += -1 * std::min(speed.Length, fraction) * speed.y * GameTimer.getDeltaTime();
         }
+
+        //Properties Updates
         // need to times the deltaTime as a static global singleton variable.
-        speed.first += a.first * forward.first;
-        speed.second += a.second * forward.second;
+        speed.x += a.x * forward.x;
+        speed.y += a.y * forward.y;
         //约束最大速度, 通过sin和cos分解出x,y值
-        if(normalize2D(speed) >= maxSpeed){
+        //maxSpeed * forward?
+        //FIXME: we haven't limit the speed.
+        if(speed.Length > maxSpeed){
             
         }
         updateEngineStatus();
@@ -148,19 +160,19 @@ public:
     }
     void moving()
     {
-        if (normalize2D(speed) >= 0.1f)
+        if (speed.Length >= 0.1f)
         {
-            position.first += speed.first;
-            position.second += speed.second;
+            position.x += speed.x;
+            position.y += speed.y;
             // std::cout << "a:" << a.first << "," << a.second << "\r";
-            std::cout << "speed:" << speed.first << "," << speed.second << "\r";
             // std::cout << "moving:" << position.first << "," << position.second << std::endl;
         }
         //初始化
         else{
-            speed.first = 0;
-            speed.second = 0;
+            speed.x = 0;
+            speed.y = 0;
         }
+        std::cout << "speed:" << speed.x << "," << speed.y << "\r";
     }
 };
 #endif
